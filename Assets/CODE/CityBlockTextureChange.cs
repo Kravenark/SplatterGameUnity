@@ -14,7 +14,7 @@ public class CityBlockTextureChange : MonoBehaviour
         Renderer blockRenderer = GetComponent<Renderer>();
         if (blockRenderer == null)
         {
-            Debug.LogWarning("CityBlockTextureChange: No Renderer component found on this object.");
+            Debug.LogWarning($"CityBlockTextureChange: No Renderer found on {gameObject.name}.");
             return;
         }
 
@@ -45,26 +45,23 @@ public class CityBlockTextureChange : MonoBehaviour
                 Debug.LogWarning("CityBlockTextureChange: Unknown tag on this object.");
                 break;
         }
-
-        CityBlockManager cityBlockManager = GameObject.Find("GameManager").GetComponent<CityBlockManager>();
-        if (cityBlockManager != null)
-        {
-            cityBlockManager.cityBlockInitialized = true;
-        }
     }
 
-    // Function to update tags for all child objects on the Buildings layer
+    // Function to update tags and materials for all child objects with the "Buildings" layer
     private void UpdateChildrenTags(string newTag)
     {
         foreach (Transform child in transform)
         {
             if (child.gameObject.layer == LayerMask.NameToLayer("Buildings"))
             {
-                child.gameObject.tag = newTag;
-                child.gameObject.GetComponent<CityBuildingTextureChange>().BuildingColourUpdate();
+                CityBuildingTextureChange buildingTexture = child.gameObject.GetComponent<CityBuildingTextureChange>();
+                if (buildingTexture != null)
+                {
+                    buildingTexture.ApplyPlayerColor(newTag);
+                }
 
-                // Optional: Add debug to confirm the tag change
-                Debug.Log($"Updated {child.gameObject.name} to tag {newTag}");
+                // Debug log for tag update
+                Debug.Log($"Updated {child.gameObject.name} to tag {newTag}.");
             }
         }
     }

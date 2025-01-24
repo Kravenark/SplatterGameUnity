@@ -46,56 +46,43 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-private void Shoot()
-{
-    lastShotTime = Time.time; // Update the last shot time
-
-    // Get the ray from the player's camera to the mouse position
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    RaycastHit hit;
-
-    // Perform the raycast
-    if (Physics.Raycast(ray, out hit, shootingRange, raycastLayerMask))
+    private void Shoot()
     {
-        // Get the hit object
-        GameObject target = hit.collider.gameObject;
+        lastShotTime = Time.time; // Update the last shot time
 
-        // Check if the hit object is an AI player
-        if (target.CompareTag("PlayerRed") || target.CompareTag("PlayerGreen") || target.CompareTag("PlayerBlue"))
+        // Get the ray from the player's camera to the mouse position
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        // Perform the raycast
+        if (Physics.Raycast(ray, out hit, shootingRange, raycastLayerMask))
         {
-            int randomChance = Random.Range(1, 101);
-            if (randomChance <= hitChance)
-            {
-                Debug.Log($"HIT! {gameObject.name} hit {target.name}");
-                HandleHit(target); // Call HandleHit for AI players
-            }
-            else
-            {
-                Debug.Log($"MISS! {gameObject.name} missed {target.name}");
-            }
-        }
+            GameObject target = hit.collider.gameObject;
 
-        // Check if the hit object is a building
-        CityBuildingTextureChange building = target.GetComponent<CityBuildingTextureChange>();
-        if (building != null)
+            // Check if the hit object is a building
+            if (target.CompareTag("CityBuildingGrey") || target.CompareTag("CityBuildingRed") ||
+                target.CompareTag("CityBuildingGreen") || target.CompareTag("CityBuildingBlue"))
+            {
+                string playerTag = gameObject.tag; // Get the player's tag (e.g., PlayerRed)
+                CityBuildingTextureChange buildingTexture = target.GetComponent<CityBuildingTextureChange>();
+
+                if (buildingTexture != null)
+                {
+                    buildingTexture.ApplyPlayerColor(playerTag);
+                    Debug.Log($"PlayerCombat: {gameObject.name} sprayed {target.name}.");
+                }
+            }
+
+            // Draw the ray to the hit point
+            DrawRay(transform.position, hit.point);
+        }
+        else
         {
-            // Change the building's color based on the player's tag
-            building.ChangeBuildingColor(gameObject.tag);
-            Debug.Log($"PlayerCombat: {gameObject.name} sprayed {target.name}");
+            // If no hit, draw the ray to the maximum range
+            Vector3 targetPoint = ray.origin + ray.direction * shootingRange;
+            DrawRay(transform.position, targetPoint);
         }
-
-        // Draw the ray to the hit point
-        DrawRay(transform.position, hit.point);
     }
-    else
-    {
-        // If no hit, draw the ray to the maximum range
-        Vector3 targetPoint = ray.origin + ray.direction * shootingRange;
-        DrawRay(transform.position, targetPoint);
-    }
-}
-
-
 
     private void DrawRay(Vector3 start, Vector3 end)
     {
@@ -114,47 +101,5 @@ private void Shoot()
         lineRenderer.enabled = true; // Enable the Line Renderer
         yield return new WaitForSeconds(0.1f); // Show the ray for 0.1 seconds
         lineRenderer.enabled = false; // Disable the Line Renderer
-    }
-
-    private void HandleHit(GameObject target)
-    {
-        AICombat targetAI = target.GetComponent<AICombat>();
-        if (targetAI != null)
-        {
-            targetAI.StartRespawn(); // Trigger respawn for the AI
-        }
-
-        Debug.Log($"{target.name} was hit by {gameObject.name}!");
-    }
-
-    public void TakeDamage()
-    {
-        if (isRespawning) return;
-
-        Debug.Log($"{gameObject.name} was hit and is respawning...");
-        StartRespawn();
-    }
-
-    private void StartRespawn()
-    {
-        isRespawning = true;
-
-        // Disable the player during respawn
-        gameObject.SetActive(false);
-
-        // Respawn after the delay
-        Invoke(nameof(Respawn), respawnDelay);
-    }
-
-    private void Respawn()
-    {
-        // Reset the player's position to the initial spawn point
-        transform.position = initialPosition;
-
-        // Reactivate the player
-        gameObject.SetActive(true);
-        isRespawning = false;
-
-        Debug.Log($"{gameObject.name} respawned at {initialPosition}");
     }
 }
