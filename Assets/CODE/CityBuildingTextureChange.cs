@@ -50,26 +50,31 @@ public class CityBuildingTextureChange : MonoBehaviour
 
     public void ApplyPlayerColor(string playerTag)
     {
-        // Change the material and tag based on the player's tag
-        if (buildingRenderer == null) return;
-
         switch (playerTag)
         {
             case "PlayerRed":
+            case "CityBuildingRed":
                 buildingRenderer.material = redMaterial;
                 gameObject.tag = "CityBuildingRed";
                 break;
             case "PlayerGreen":
+            case "CityBuildingGreen":
                 buildingRenderer.material = greenMaterial;
                 gameObject.tag = "CityBuildingGreen";
                 break;
             case "PlayerBlue":
+            case "CityBuildingBlue":
                 buildingRenderer.material = blueMaterial;
                 gameObject.tag = "CityBuildingBlue";
+                break;
+            case "CityBuildingGrey":
+                buildingRenderer.material = greyMaterial;
+                gameObject.tag = "CityBuildingGrey";
                 break;
             default:
                 Debug.LogWarning($"CityBuildingTextureChange: Unknown player tag {playerTag}.");
                 break;
         }
     }
+
 }
