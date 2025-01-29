@@ -9,45 +9,46 @@ public class PlayerManager : MonoBehaviour
 
     void Start()
     {
-        PlayerManager playerManager = FindObjectOfType<PlayerManager>();
         CityBlockManager cityBlockManager = FindObjectOfType<CityBlockManager>();
 
-        if (playerManager == null || cityBlockManager == null)
+        if (cityBlockManager == null)
         {
-            Debug.LogError("Error: PlayerManager or CityBlockManager is missing from the scene!");
+            Debug.LogError("PlayerManager: CityBlockManager not found!");
             return;
         }
 
-        // Find and store players
-        GameObject[] players = new GameObject[]
-        {
-        GameObject.Find("Player1"),
-        GameObject.Find("Player2"),
-        GameObject.Find("Player3")
+        GameObject[] players = {
+            GameObject.Find("Player1"),
+            GameObject.Find("Player2"),
+            GameObject.Find("Player3")
         };
 
-        // Ensure all players exist before proceeding
-        for (int i = 0; i < players.Length; i++)
+        foreach (GameObject player in players)
         {
-            if (players[i] == null)
+            if (player == null)
             {
-                Debug.LogError($"Error: Player{i + 1} is missing from the scene!");
+                Debug.LogError("PlayerManager: A player object was not found!");
                 return;
             }
         }
 
-        // Assign colors only if all players are valid
-        playerManager.AssignRandomColors(players);
+        // Assign colors and ensure they are stored before teleporting
+        AssignRandomColors(players);
 
-        // Start coroutine with a slight delay to allow proper setup
-        StartCoroutine(playerManager.TeleportAllPlayersToSpawnWithDelay(players, cityBlockManager));
+        // Small delay before teleportation to ensure colors are assigned
+        StartCoroutine(DelayedTeleport(players, cityBlockManager));
     }
 
+    private IEnumerator DelayedTeleport(GameObject[] players, CityBlockManager cityBlockManager)
+    {
+        yield return new WaitForSeconds(0.5f);
+        StartCoroutine(TeleportAllPlayersToSpawnWithDelay(players, cityBlockManager));
+    }
 
-    // Assign a unique random color to each player
+    // Assign unique colors to players and update the dictionary
     public void AssignRandomColors(GameObject[] players)
     {
-        List<string> availableColors = new List<string> { "PlayerRed", "PlayerGreen", "PlayerBlue" };
+        List<string> colors = new List<string>(availableColors);
 
         foreach (GameObject player in players)
         {
@@ -57,21 +58,20 @@ public class PlayerManager : MonoBehaviour
                 continue;
             }
 
-            if (availableColors.Count == 0)
+            if (colors.Count == 0)
             {
                 Debug.LogError("PlayerManager: Not enough colors for all players!");
                 return;
             }
 
-            // Assign a color randomly
-            int randomIndex = Random.Range(0, availableColors.Count);
-            string chosenColor = availableColors[randomIndex];
-            availableColors.RemoveAt(randomIndex); // Remove the chosen color
+            int randomIndex = Random.Range(0, colors.Count);
+            string chosenColor = colors[randomIndex];
+            colors.RemoveAt(randomIndex);
 
-            // Set the player's tag
             player.tag = chosenColor;
+            playerColors[player] = chosenColor; // Store in dictionary
 
-            // Apply the correct material (assuming PlayerTextureChange handles this)
+            // Apply the correct material
             PlayerTextureChange textureChange = player.GetComponent<PlayerTextureChange>();
             if (textureChange != null)
             {
@@ -86,41 +86,10 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private string GetRandomAvailableColor()
-    {
-        if (availableColors.Count == 0) return null;
-
-        int randomIndex = Random.Range(0, availableColors.Count);
-        string color = availableColors[randomIndex];
-        availableColors.RemoveAt(randomIndex);
-        return color;
-    }
-
-    private void UpdatePlayerColor(GameObject player, string colorTag)
-    {
-        if (player == null)
-        {
-            Debug.LogWarning("PlayerManager: Player is null, cannot update color.");
-            return;
-        }
-
-        player.tag = colorTag;
-
-        PlayerTextureChange textureChange = player.GetComponent<PlayerTextureChange>();
-        if (textureChange != null)
-        {
-            textureChange.UpdatePlayerTexture();
-        }
-        else
-        {
-            Debug.LogWarning($"PlayerManager: Player {player.name} does not have a PlayerTextureChange component.");
-        }
-    }
-
     // Coroutine to teleport all players to their respective spawn positions after a delay
     private IEnumerator TeleportAllPlayersToSpawnWithDelay(GameObject[] players, CityBlockManager cityBlockManager)
     {
-        yield return new WaitForSeconds(1f); // Small delay before teleporting
+        yield return new WaitForSeconds(0.25f); // Small delay before teleporting
 
         if (players == null || players.Length == 0)
         {
@@ -149,12 +118,14 @@ public class PlayerManager : MonoBehaviour
             return;
         }
 
-        // Get the player's color from the dictionary
+        // Ensure the dictionary contains the player's color
         if (!playerColors.TryGetValue(player, out string playerTag))
         {
-            Debug.LogWarning($"PlayerManager: Player {player.name} does not have an assigned color.");
+            Debug.LogWarning($"PlayerManager: Player {player.name} does not have an assigned color in dictionary.");
             return;
         }
+
+        Debug.Log($"Teleporting {player.name} with color {playerTag}");
 
         // Find city blocks with the corresponding color tag using CityBlockManager
         GameObject[] cityBlocks = cityBlockManager.GetCityBlocksByTag(playerTag.Replace("Player", "CityBlock"));

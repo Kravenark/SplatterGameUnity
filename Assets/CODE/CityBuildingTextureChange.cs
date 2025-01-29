@@ -11,7 +11,6 @@ public class CityBuildingTextureChange : MonoBehaviour
 
     private void Start()
     {
-        // Initialize the building's renderer
         buildingRenderer = GetComponent<Renderer>();
         if (buildingRenderer == null)
         {
@@ -19,9 +18,13 @@ public class CityBuildingTextureChange : MonoBehaviour
             return;
         }
 
-        // Ensure the material matches the tag
-        UpdateBuildingMaterial();
+        if (redMaterial == null || greenMaterial == null || blueMaterial == null || greyMaterial == null)
+        {
+            Debug.LogError($"CityBuildingTextureChange: One or more materials are not assigned on {gameObject.name}.");
+            return;
+        }
     }
+
 
     public void UpdateBuildingMaterial()
     {
@@ -50,29 +53,28 @@ public class CityBuildingTextureChange : MonoBehaviour
 
     public void ApplyPlayerColor(string playerTag)
     {
+        if (buildingRenderer == null)
+        {
+            Debug.LogError($"CityBuildingTextureChange: Renderer is missing on {gameObject.name}");
+            return;
+        }
+
         switch (playerTag)
         {
             case "PlayerRed":
-            case "CityBuildingRed":
                 buildingRenderer.material = redMaterial;
                 gameObject.tag = "CityBuildingRed";
                 break;
             case "PlayerGreen":
-            case "CityBuildingGreen":
                 buildingRenderer.material = greenMaterial;
                 gameObject.tag = "CityBuildingGreen";
                 break;
             case "PlayerBlue":
-            case "CityBuildingBlue":
                 buildingRenderer.material = blueMaterial;
                 gameObject.tag = "CityBuildingBlue";
                 break;
-            case "CityBuildingGrey":
-                buildingRenderer.material = greyMaterial;
-                gameObject.tag = "CityBuildingGrey";
-                break;
             default:
-                Debug.LogWarning($"CityBuildingTextureChange: Unknown player tag {playerTag}.");
+                Debug.LogWarning($"CityBuildingTextureChange: Unknown player tag {playerTag} on {gameObject.name}");
                 break;
         }
     }

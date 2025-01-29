@@ -54,15 +54,18 @@ public class CityBlockTextureChange : MonoBehaviour
         {
             if (child.gameObject.layer == LayerMask.NameToLayer("Buildings"))
             {
-                CityBuildingTextureChange buildingTexture = child.gameObject.GetComponent<CityBuildingTextureChange>();
-                if (buildingTexture != null)
+                CityBuildingTextureChange buildingScript = child.GetComponent<CityBuildingTextureChange>();
+                if (buildingScript != null)
                 {
-                    buildingTexture.ApplyPlayerColor(newTag);
+                    buildingScript.ApplyPlayerColor(newTag);
                 }
-
-                // Debug log for tag update
-                Debug.Log($"Updated {child.gameObject.name} to tag {newTag}.");
+                else
+                {
+                    Debug.LogWarning($"CityBlockTextureChange: {child.gameObject.name} does not have a CityBuildingTextureChange component.");
+                }
             }
         }
     }
+
+
 }
