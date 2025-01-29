@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using System.Collections;
 public class CityBlockTextureChange : MonoBehaviour
 {
     public Material redMaterial;  // Material for red blocks
@@ -9,6 +9,20 @@ public class CityBlockTextureChange : MonoBehaviour
     public Material noneMaterial; // Default material for "none"
 
     // Function to update the texture based on the GameObject's tag
+
+    private void Start()
+    {
+        StartCoroutine(DelayedBuildingUpdate());
+    }
+
+    private IEnumerator DelayedBuildingUpdate()
+    {
+        yield return new WaitForSeconds(0.2f); // Small delay
+        UpdateChildrenTags(gameObject.tag);
+    }
+
+
+
     public void UpdateBlockTexture()
     {
         Renderer blockRenderer = GetComponent<Renderer>();
@@ -18,7 +32,7 @@ public class CityBlockTextureChange : MonoBehaviour
             return;
         }
 
-        // Assign the material based on the GameObject's tag
+        // Update the city block's material based on its tag
         switch (gameObject.tag)
         {
             case "CityBlockRed":
@@ -37,12 +51,8 @@ public class CityBlockTextureChange : MonoBehaviour
                 blockRenderer.material = greyMaterial;
                 UpdateChildrenTags("CityBuildingGrey");
                 break;
-            case "CityBlockNone":
-                blockRenderer.material = noneMaterial;
-                UpdateChildrenTags("CityBuildingNone");
-                break;
             default:
-                Debug.LogWarning("CityBlockTextureChange: Unknown tag on this object.");
+                Debug.LogWarning($"CityBlockTextureChange: Unknown tag {gameObject.tag}.");
                 break;
         }
     }
@@ -54,18 +64,20 @@ public class CityBlockTextureChange : MonoBehaviour
         {
             if (child.gameObject.layer == LayerMask.NameToLayer("Buildings"))
             {
-                CityBuildingTextureChange buildingScript = child.GetComponent<CityBuildingTextureChange>();
+                child.gameObject.tag = newTag;
+
+                CityBuildingTextureChange buildingScript = child.gameObject.GetComponent<CityBuildingTextureChange>();
                 if (buildingScript != null)
                 {
-                    buildingScript.ApplyPlayerColor(newTag);
+                    buildingScript.BuildingColourUpdate(); // Ensure it updates the material
+                    Debug.Log($"Updated {child.gameObject.name} to {newTag}"); // Debug log
                 }
                 else
                 {
-                    Debug.LogWarning($"CityBlockTextureChange: {child.gameObject.name} does not have a CityBuildingTextureChange component.");
+                    Debug.LogError($"CityBlockTextureChange: {child.gameObject.name} does not have CityBuildingTextureChange script!");
                 }
             }
         }
     }
-
 
 }
