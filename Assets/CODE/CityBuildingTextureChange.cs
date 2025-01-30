@@ -9,118 +9,129 @@ public class CityBuildingTextureChange : MonoBehaviour
     public Material greyMaterial;
 
     private Renderer buildingRenderer;
+    private Coroutine transitionCoroutine;
+    private bool isBeingSprayed = false; // Tracks if currently being sprayed
 
     private void Start()
     {
         buildingRenderer = GetComponent<Renderer>();
-
         if (buildingRenderer == null)
         {
             Debug.LogError($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
             return;
         }
+    }
 
-        // Get the parent city block
-        Transform parentCityBlock = transform.parent;
-        if (parentCityBlock == null)
+    public void StartSpraying(string playerTag)
+    {
+        isBeingSprayed = true; // Player is actively spraying
+
+        if (transitionCoroutine != null)
         {
-            Debug.LogWarning($"CityBuildingTextureChange: {gameObject.name} does not have a parent city block.");
-            return;
+            StopCoroutine(transitionCoroutine); // Stop any previous transition
         }
 
-        // Get the initial color from the city block
-        string cityBlockTag = parentCityBlock.tag.Replace("CityBlock", "CityBuilding");
-        StartCoroutine(DelayedInitializeMaterial(cityBlockTag));
+        transitionCoroutine = StartCoroutine(SmoothBuildingTransition(playerTag));
     }
 
-    private IEnumerator DelayedInitializeMaterial(string newTag)
+    public void StopSpraying()
     {
-        yield return new WaitForSeconds(0.5f); // Small delay to ensure city block initializes first
-        ApplyMaterialBasedOnTag(newTag);
+        isBeingSprayed = false; // Player stopped spraying
     }
 
-    public void SetBuildingColor(string newTag, Material newMaterial)
+    private IEnumerator SmoothBuildingTransition(string playerTag)
     {
-        gameObject.tag = newTag;
-        ApplyMaterialBasedOnTag(newTag);
-    }
-
-    private void ApplyMaterialBasedOnTag(string buildingTag)
-    {
-        if (buildingRenderer == null) return;
-
-        switch (buildingTag)
+        if (buildingRenderer == null)
         {
-            case "CityBuildingRed":
-                buildingRenderer.material = redMaterial;
-                break;
-            case "CityBuildingGreen":
-                buildingRenderer.material = greenMaterial;
-                break;
-            case "CityBuildingBlue":
-                buildingRenderer.material = blueMaterial;
-                break;
+            Debug.LogWarning($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
+            yield break;
+        }
+
+        // Get the correct target material
+        Material targetMaterial = GetMaterialFromTag(playerTag);
+        if (targetMaterial == null)
+        {
+            Debug.LogWarning($"CityBuildingTextureChange: No valid material found for {playerTag}.");
+            yield break;
+        }
+
+        Color startColor = buildingRenderer.material.color;
+        Color targetColor = targetMaterial.color;
+
+        float elapsedTime = 0f;
+        float transitionDuration = 2f; // Time to transition fully
+
+        while (elapsedTime < transitionDuration)
+        {
+            if (!isBeingSprayed) // Stop transition if player stops spraying
+            {
+                Debug.Log($"CityBuildingTextureChange: Transition stopped for {gameObject.name}.");
+                yield break;
+            }
+
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / transitionDuration;
+            buildingRenderer.material.color = Color.Lerp(startColor, targetColor, t);
+            yield return null;
+        }
+
+        // Finalize transition
+        buildingRenderer.material = targetMaterial;
+        gameObject.tag = playerTag.Replace("Player", "CityBuilding");
+        Debug.Log($"CityBuildingTextureChange: {gameObject.name} fully converted to {gameObject.tag}.");
+    }
+
+    private Material GetMaterialFromTag(string tag)
+    {
+        switch (tag)
+        {
+            case "PlayerRed":
+                return redMaterial;
+            case "PlayerGreen":
+                return greenMaterial;
+            case "PlayerBlue":
+                return blueMaterial;
             case "CityBuildingGrey":
-                buildingRenderer.material = greyMaterial;
-                break;
+                return greyMaterial;
             default:
-                Debug.LogWarning($"CityBuildingTextureChange: Unknown tag {buildingTag}.");
-                break;
+                return null;
         }
-
-        Debug.Log($"{gameObject.name} assigned material based on {buildingTag}.");
     }
 
-    public IEnumerator SmoothBuildingTransition(string playerTag)
+
+
+    public void SetBuildingColor(string newTag)
 {
     if (buildingRenderer == null)
     {
-        Debug.LogWarning($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
-        yield break;
+        Debug.LogError($"CityBuildingTextureChange: Renderer is missing on {gameObject.name}");
+        return;
     }
 
-    Material targetMaterial = GetMaterialFromTag(playerTag);
-    if (targetMaterial == null)
+    // Assign the correct material based on the new tag
+    switch (newTag)
     {
-        Debug.LogWarning($"CityBuildingTextureChange: No matching material for tag {playerTag}.");
-        yield break;
+        case "CityBuildingRed":
+            buildingRenderer.material = redMaterial;
+            break;
+        case "CityBuildingGreen":
+            buildingRenderer.material = greenMaterial;
+            break;
+        case "CityBuildingBlue":
+            buildingRenderer.material = blueMaterial;
+            break;
+        case "CityBuildingGrey":
+            buildingRenderer.material = greyMaterial;
+            break;
+        default:
+            Debug.LogWarning($"CityBuildingTextureChange: Unknown tag {newTag}.");
+            return;
     }
 
-    Color startColor = buildingRenderer.material.color;
-    Color targetColor = targetMaterial.color;
-    float transitionDuration = 2f;
-    float elapsedTime = 0f;
+    // Update the building's tag
+    gameObject.tag = newTag;
 
-    while (elapsedTime < transitionDuration)
-    {
-        elapsedTime += Time.deltaTime;
-        float t = elapsedTime / transitionDuration;
-        buildingRenderer.material.color = Color.Lerp(startColor, targetColor, t);
-        yield return null;
-    }
-
-    // Finalize transition and update tag
-    buildingRenderer.material = targetMaterial;
-    gameObject.tag = ConvertPlayerTagToBuildingTag(playerTag);
-    Debug.Log($"CityBuildingTextureChange: {gameObject.name} fully transitioned to {gameObject.tag}.");
-}
-
-// **Helper: Convert Player Tag (PlayerRed) to Building Tag (CityBuildingRed)**
-private string ConvertPlayerTagToBuildingTag(string playerTag)
-{
-    return playerTag.Replace("Player", "CityBuilding");
-}
-
-// **Helper: Get Material from Tag**
-private Material GetMaterialFromTag(string tag)
-{
-    switch (tag)
-    {
-        case "PlayerRed": return redMaterial;
-        case "PlayerGreen": return greenMaterial;
-        case "PlayerBlue": return blueMaterial;
-        default: return null;
-    }
+    Debug.Log($"CityBuildingTextureChange: {gameObject.name} updated to {newTag}.");
 }
 
 }

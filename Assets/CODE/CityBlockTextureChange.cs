@@ -61,7 +61,8 @@ public class CityBlockTextureChange : MonoBehaviour
                 CityBuildingTextureChange buildingScript = child.GetComponent<CityBuildingTextureChange>();
                 if (buildingScript != null)
                 {
-                    buildingScript.SetBuildingColor(newTag, newMaterial);
+            buildingScript.SetBuildingColor(newTag); // Remove the second argument
+
                 }
             }
         }

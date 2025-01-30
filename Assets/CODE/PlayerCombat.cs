@@ -35,26 +35,38 @@ public class PlayerCombat : MonoBehaviour
         lineRenderer.enabled = false; 
     }
 
-    private void Update()
+ private void Update()
     {
         if (isRespawning) return;
 
-        // Start firing when holding the fire button
         if (Input.GetMouseButton(0) && Time.time >= lastShotTime + shootingCooldown)
         {
             Shoot();
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            lineRenderer.enabled = false; // Hide the line when the button is released
+            lineRenderer.enabled = false;
+
+            // Stop spraying buildings when the player releases the fire button
+            StopSprayingBuildings();
         }
     }
 
-    private void Shoot()
+    private void StopSprayingBuildings()
+    {
+        CityBuildingTextureChange[] allBuildings = FindObjectsOfType<CityBuildingTextureChange>();
+        foreach (CityBuildingTextureChange building in allBuildings)
+        {
+            building.StopSpraying();
+        }
+    }
+
+
+
+ private void Shoot()
     {
         lastShotTime = Time.time;
 
-        // Get the ray from camera to mouse
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         Vector3 worldMousePosition;
 
@@ -67,26 +79,19 @@ public class PlayerCombat : MonoBehaviour
             worldMousePosition = ray.GetPoint(10f);
         }
 
-        // Ensure the Y level stays the same
         float playerY = transform.position.y;
         worldMousePosition.y = playerY;
 
-        // Get direction from player to mouse
         Vector3 direction = (worldMousePosition - transform.position).normalized;
-        if (direction == Vector3.zero) direction = transform.forward; // Prevent zero vector issues
+        if (direction == Vector3.zero) direction = transform.forward;
 
-        // Calculate the end point
         Vector3 endPoint = transform.position + (direction * lineRendererLength);
         endPoint.y = playerY;
 
-        // Set line renderer positions
         lineRenderer.SetPosition(0, transform.position);
         lineRenderer.SetPosition(1, endPoint);
         lineRenderer.enabled = true;
 
-        Debug.Log($"Shooting in direction: {direction}, End Point: {endPoint}");
-
-        // Perform the raycast
         if (Physics.Raycast(transform.position, direction, out hit, lineRendererLength, raycastLayerMask))
         {
             endPoint = hit.point;
@@ -94,20 +99,13 @@ public class PlayerCombat : MonoBehaviour
 
             GameObject target = hit.collider.gameObject;
 
-            // Handle hitting players
             if (target.CompareTag("PlayerRed") || target.CompareTag("PlayerGreen") || target.CompareTag("PlayerBlue"))
             {
                 if (Random.Range(1, 101) <= hitChance)
                 {
-                    Debug.Log($"HIT! {gameObject.name} hit {target.name}");
                     HandleHit(target);
                 }
-                else
-                {
-                    Debug.Log($"MISS! {gameObject.name} missed {target.name}");
-                }
             }
-            // Handle hitting buildings
             else if (target.CompareTag("CityBuildingRed") || target.CompareTag("CityBuildingGreen") ||
                      target.CompareTag("CityBuildingBlue") || target.CompareTag("CityBuildingGrey"))
             {
@@ -115,7 +113,7 @@ public class PlayerCombat : MonoBehaviour
                 if (building != null)
                 {
                     string playerTag = gameObject.tag;
-                    building.StartCoroutine(building.SmoothBuildingTransition(playerTag));
+                    building.StartSpraying(playerTag); // Start spraying transition
                 }
             }
         }
