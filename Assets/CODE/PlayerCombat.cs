@@ -1,24 +1,24 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerCombat : MonoBehaviour
 {
-    public float shootingCooldown = 1f; // Cooldown between shots
-    public int hitChance = 50; // Chance to hit a target
-    public float shootingRange = 50f; // Range of the player's raycast
-    public LayerMask raycastLayerMask; // Layers the raycast can hit
-    public float respawnDelay = 3f; // Delay before respawn if the player is hit
+    public float shootingCooldown = 1f;
+    public int hitChance = 50;
+    public float shootingRange = 50f;
+    public LayerMask raycastLayerMask;
+    public float lineRendererLength = 10f;
+    public float respawnDelay = 3f;
 
-    private float lastShotTime = 0f; // Tracks time of last shot
-    private bool isRespawning = false; // Tracks if the player is respawning
-    private Vector3 initialPosition; // Player's spawn point
-    private LineRenderer lineRenderer; // Reference to the Line Renderer
+    private float lastShotTime = 0f;
+    private bool isRespawning = false;
+    private Vector3 initialPosition;
+    private LineRenderer lineRenderer;
 
     private void Start()
     {
-        // Cache the initial spawn position
         initialPosition = transform.position;
 
-        // Get the existing Line Renderer attached to the player
         lineRenderer = gameObject.GetComponent<LineRenderer>();
         if (lineRenderer == null)
         {
@@ -32,56 +32,95 @@ public class PlayerCombat : MonoBehaviour
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.startColor = Color.red;
         lineRenderer.endColor = Color.red;
-        lineRenderer.enabled = false; // Initially disable the Line Renderer
+        lineRenderer.enabled = false; 
     }
 
     private void Update()
     {
         if (isRespawning) return;
 
-        // Handle shooting when the mouse button is held down
+        // Start firing when holding the fire button
         if (Input.GetMouseButton(0) && Time.time >= lastShotTime + shootingCooldown)
         {
             Shoot();
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            lineRenderer.enabled = false; // Hide the line when the button is released
         }
     }
 
     private void Shoot()
     {
-        lastShotTime = Time.time; // Update the last shot time
+        lastShotTime = Time.time;
 
-        // Get the ray from the player's camera to the mouse position
+        // Get the ray from camera to mouse
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
+        Vector3 worldMousePosition;
 
-        // Perform the raycast
-        if (Physics.Raycast(ray, out hit, shootingRange, raycastLayerMask))
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, raycastLayerMask))
         {
-            GameObject target = hit.collider.gameObject;
-
-            // Check if the hit object is a building
-            if (target.CompareTag("CityBuildingGrey") || target.CompareTag("CityBuildingRed") ||
-                target.CompareTag("CityBuildingGreen") || target.CompareTag("CityBuildingBlue"))
-            {
-                string playerTag = gameObject.tag; // Get the player's tag (e.g., PlayerRed)
-                CityBuildingTextureChange buildingTexture = target.GetComponent<CityBuildingTextureChange>();
-
-                if (buildingTexture != null)
-                {
-                    buildingTexture.ApplyPlayerColor(playerTag);
-                    Debug.Log($"PlayerCombat: {gameObject.name} sprayed {target.name}.");
-                }
-            }
-
-            // Draw the ray to the hit point
-            DrawRay(transform.position, hit.point);
+            worldMousePosition = hit.point;
         }
         else
         {
-            // If no hit, draw the ray to the maximum range
-            Vector3 targetPoint = ray.origin + ray.direction * shootingRange;
-            DrawRay(transform.position, targetPoint);
+            worldMousePosition = ray.GetPoint(10f);
         }
+
+        // Ensure the Y level stays the same
+        float playerY = transform.position.y;
+        worldMousePosition.y = playerY;
+
+        // Get direction from player to mouse
+        Vector3 direction = (worldMousePosition - transform.position).normalized;
+        if (direction == Vector3.zero) direction = transform.forward; // Prevent zero vector issues
+
+        // Calculate the end point
+        Vector3 endPoint = transform.position + (direction * lineRendererLength);
+        endPoint.y = playerY;
+
+        // Set line renderer positions
+        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(1, endPoint);
+        lineRenderer.enabled = true;
+
+        Debug.Log($"Shooting in direction: {direction}, End Point: {endPoint}");
+
+        // Perform the raycast
+        if (Physics.Raycast(transform.position, direction, out hit, lineRendererLength, raycastLayerMask))
+        {
+            endPoint = hit.point;
+            endPoint.y = playerY;
+
+            GameObject target = hit.collider.gameObject;
+
+            // Handle hitting players
+            if (target.CompareTag("PlayerRed") || target.CompareTag("PlayerGreen") || target.CompareTag("PlayerBlue"))
+            {
+                if (Random.Range(1, 101) <= hitChance)
+                {
+                    Debug.Log($"HIT! {gameObject.name} hit {target.name}");
+                    HandleHit(target);
+                }
+                else
+                {
+                    Debug.Log($"MISS! {gameObject.name} missed {target.name}");
+                }
+            }
+            // Handle hitting buildings
+            else if (target.CompareTag("CityBuildingRed") || target.CompareTag("CityBuildingGreen") ||
+                     target.CompareTag("CityBuildingBlue") || target.CompareTag("CityBuildingGrey"))
+            {
+                CityBuildingTextureChange building = target.GetComponent<CityBuildingTextureChange>();
+                if (building != null)
+                {
+                    string playerTag = gameObject.tag;
+                    building.StartCoroutine(building.SmoothBuildingTransition(playerTag));
+                }
+            }
+        }
+
+        DrawRay(transform.position, endPoint);
     }
 
     private void DrawRay(Vector3 start, Vector3 end)
@@ -90,16 +129,18 @@ public class PlayerCombat : MonoBehaviour
         {
             lineRenderer.SetPosition(0, start);
             lineRenderer.SetPosition(1, end);
-
-            // Show the line temporarily
-            StartCoroutine(ShowRay());
+            lineRenderer.enabled = true;
         }
     }
 
-    private System.Collections.IEnumerator ShowRay()
+    private void HandleHit(GameObject target)
     {
-        lineRenderer.enabled = true; // Enable the Line Renderer
-        yield return new WaitForSeconds(0.1f); // Show the ray for 0.1 seconds
-        lineRenderer.enabled = false; // Disable the Line Renderer
+        AICombat targetAI = target.GetComponent<AICombat>();
+        if (targetAI != null)
+        {
+            // targetAI.StartRespawn(); (Uncomment when needed)
+        }
+
+        Debug.Log($"{target.name} was hit by {gameObject.name}!");
     }
 }
