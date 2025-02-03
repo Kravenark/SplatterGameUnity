@@ -288,13 +288,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shootingCooldown: 0.1
-  hitChance: 50
   shootingRange: 50
+  lineRendererLength: 10
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 896
-  lineRendererLength: 10
-  respawnDelay: 3.1
+  lineRenderer: {fileID: 0}
 --- !u!114 &28289433
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -310,7 +309,7 @@ MonoBehaviour:
   redMaterial: {fileID: 2100000, guid: f381b37ca4f956b498c58def4bebec6c, type: 2}
   greenMaterial: {fileID: 2100000, guid: 647aa8d261b971940aaf3535c5215f97, type: 2}
   blueMaterial: {fileID: 2100000, guid: d0f7be08d924c3640ba868cd5da82dac, type: 2}
-  defaultMaterial: {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
+  noneMaterial: {fileID: 0}
 --- !u!120 &28289434
 LineRenderer:
   serializedVersion: 2
@@ -612,7 +611,7 @@ GameObject:
   - component: {fileID: 77254838}
   m_Layer: 6
   m_Name: CityBlock 0 (4)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -712,7 +711,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1089,7 +1088,7 @@ GameObject:
   - component: {fileID: 165236760}
   m_Layer: 6
   m_Name: CityBlock 0 (3)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1189,7 +1188,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1716,7 +1715,7 @@ GameObject:
   - component: {fileID: 271687258}
   m_Layer: 6
   m_Name: CityBlock 0 (7)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1816,7 +1815,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2897,7 +2896,7 @@ GameObject:
   - component: {fileID: 628289251}
   m_Layer: 6
   m_Name: CityBlock 0 (5)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2997,7 +2996,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4201,7 +4200,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c067844c993148af178cd4cfeb7c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cityBlockInitialized: 0
 --- !u!4 &840719008
 Transform:
   m_ObjectHideFlags: 0
@@ -5991,7 +5989,7 @@ GameObject:
   - component: {fileID: 1223740931}
   m_Layer: 6
   m_Name: CityBlock 0 (6)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6091,7 +6089,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6320,7 +6318,7 @@ MonoBehaviour:
   redMaterial: {fileID: 2100000, guid: f381b37ca4f956b498c58def4bebec6c, type: 2}
   greenMaterial: {fileID: 2100000, guid: 647aa8d261b971940aaf3535c5215f97, type: 2}
   blueMaterial: {fileID: 2100000, guid: d0f7be08d924c3640ba868cd5da82dac, type: 2}
-  defaultMaterial: {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
+  noneMaterial: {fileID: 0}
 --- !u!136 &1314369635
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -6575,7 +6573,7 @@ GameObject:
   - component: {fileID: 1506358326}
   m_Layer: 6
   m_Name: CityBlock 0
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6621,7 +6619,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6902,7 +6900,7 @@ GameObject:
   - component: {fileID: 1516665916}
   m_Layer: 6
   m_Name: CityBlock 0 (2)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7002,7 +7000,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8098,7 +8096,7 @@ GameObject:
   - component: {fileID: 1739514540}
   m_Layer: 6
   m_Name: CityBlock 0 (1)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8198,7 +8196,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8427,7 +8425,7 @@ MonoBehaviour:
   redMaterial: {fileID: 2100000, guid: f381b37ca4f956b498c58def4bebec6c, type: 2}
   greenMaterial: {fileID: 2100000, guid: 647aa8d261b971940aaf3535c5215f97, type: 2}
   blueMaterial: {fileID: 2100000, guid: d0f7be08d924c3640ba868cd5da82dac, type: 2}
-  defaultMaterial: {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
+  noneMaterial: {fileID: 0}
 --- !u!136 &1770081638
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -9463,7 +9461,7 @@ GameObject:
   - component: {fileID: 2031568793}
   m_Layer: 6
   m_Name: CityBlock 0 (8)
-  m_TagString: CityBlockNone
+  m_TagString: CityBlockGrey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -9563,7 +9561,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9ea1f26311e35ff409fe2678b407bd0f, type: 2}
+  - {fileID: 2100000, guid: 5f2f473a166bca849887a6a3a7adf27a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
