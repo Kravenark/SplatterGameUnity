@@ -4,101 +4,60 @@ using System.Collections.Generic;
 public class CityBlockManager : MonoBehaviour
 {
     private GameObject[] cityBlocks; // Array to store all city blocks in the scene
+    public bool cityBlockInitialized = false; // Flag to indicate if city blocks are initialized
 
     private void Awake()
     {
-        // Find all GameObjects tagged as "CityBlockNone" at the start
-        cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockNone");
+        // Find all GameObjects with the tag "CityBlockNone"
+        cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockGrey");
         Debug.Log($"CityBlockManager: Found {cityBlocks.Length} city blocks in the scene.");
     }
 
     private void Start()
     {
-        AssignRandomColors();  // Assign initial colors to city blocks
-        SetRemainingBlocksToGrey(); // Set all other blocks to grey
+        AssignRandomColors();
+        SetRemainingBlocksToGrey();
+
+        // Signal that the city blocks are initialized
+        cityBlockInitialized = true;
+        Debug.Log("CityBlockManager: City blocks are initialized.");
     }
 
-    // Assign random colors to city blocks (Red, Green, Blue)
-public void AssignRandomColors()
-{
-    List<string> colors = new List<string> { "CityBlockRed", "CityBlockGreen", "CityBlockBlue" };
-    GameObject[] cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockGrey");
-
-    if (cityBlocks.Length < colors.Count)
+    // Assign random colors to three blocks
+    public void AssignRandomColors()
     {
-        Debug.LogError("CityBlockManager: Not enough city blocks to assign unique colors.");
-        return;
+        if (cityBlocks.Length < 3)
+        {
+            Debug.LogError("CityBlockManager: Not enough blocks to assign colors.");
+            return;
+        }
+
+        AssignColorToRandomBlock("CityBlockRed");
+        AssignColorToRandomBlock("CityBlockGreen");
+        AssignColorToRandomBlock("CityBlockBlue");
     }
 
-    foreach (string color in colors)
-    {
-        AssignColorToRandomBlock(color);
-    }
-}
-    // Set all remaining uncolored blocks to grey
-    public void SetRemainingBlocksToGrey()
+    // Set all remaining blocks to grey
+    private void SetRemainingBlocksToGrey()
     {
         foreach (GameObject block in cityBlocks)
         {
-            if (block.CompareTag("CityBlockNone"))
+            if (block.CompareTag("CityBlockGrey"))
             {
                 ChangeBlockTagAndMaterial(block, "CityBlockGrey");
             }
         }
     }
-// CityBlockManager.cs
 
-
-
-
-// CityBlockManager.cs
-public void AssignColorToRandomBlock(string colorTag)
-{
-    GameObject[] cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockGrey");
-
-    if (cityBlocks.Length == 0)
+    // Helper to assign a specific color to a random block
+    private void AssignColorToRandomBlock(string colorTag)
     {
-        Debug.LogWarning("CityBlockManager: No grey city blocks available.");
-        return;
-    }
-
-    GameObject randomBlock = cityBlocks[Random.Range(0, cityBlocks.Length)];
-    randomBlock.tag = colorTag;
-
-    CityBlockTextureChange blockTexture = randomBlock.GetComponent<CityBlockTextureChange>();
-    if (blockTexture != null)
-    {
-        blockTexture.UpdateBlockMaterial();  // Ensure material and buildings update
-    }
-    else
-    {
-        Debug.LogWarning($"CityBlockManager: {randomBlock.name} does not have CityBlockTextureChange attached.");
-    }
-
-    Debug.Log($"CityBlockManager: Assigned {colorTag} to {randomBlock.name}");
-}
-
-
-    // Change the block's tag and trigger its texture change
-    private void ChangeBlockTagAndMaterial(GameObject block, string newTag)
-    {
-        block.tag = newTag;
-
-        CityBlockTextureChange textureChange = block.GetComponent<CityBlockTextureChange>();
-        if (textureChange != null)
+        GameObject randomBlock = GetRandomBlockWithTag("CityBlockGrey");
+        if (randomBlock != null)
         {
-            textureChange.UpdateBlockMaterial();  // Trigger the city block to update its material
-        }
-        else
-        {
-            Debug.LogWarning($"CityBlockManager: {block.name} does not have a CityBlockTextureChange component.");
+            ChangeBlockTagAndMaterial(randomBlock, colorTag);
         }
     }
-public GameObject[] GetCityBlocksExcludingTag(string excludedTag)
-{
-    return System.Array.FindAll(cityBlocks, block => !block.CompareTag(excludedTag));
-}
-
 
     // Get a random block with a specific tag
     private GameObject GetRandomBlockWithTag(string tag)
@@ -110,9 +69,64 @@ public GameObject[] GetCityBlocksExcludingTag(string excludedTag)
         return filteredBlocks[randomIndex];
     }
 
+    // Change the tag and material of a block
+    private void ChangeBlockTagAndMaterial(GameObject block, string newTag)
+    {
+        block.tag = newTag;
+
+        CityBlockTextureChange textureChange = block.GetComponent<CityBlockTextureChange>();
+        if (textureChange != null)
+        {
+            textureChange.UpdateBlockTexture();
+        }
+    }
+
     // Get all blocks with a specific tag
     public GameObject[] GetCityBlocksByTag(string tag)
     {
         return System.Array.FindAll(cityBlocks, block => block.CompareTag(tag));
+    }
+
+    // Get all blocks excluding a specific tag
+    public GameObject[] GetCityBlocksExcludingTag(string excludedTag)
+    {
+        return System.Array.FindAll(cityBlocks, block => !block.CompareTag(excludedTag));
+    }
+
+    // Find the closest grey block to a given position
+    public GameObject FindClosestGreyBlock(Vector3 position)
+    {
+        GameObject closestGreyBlock = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (GameObject block in cityBlocks)
+        {
+            if (block.CompareTag("CityBlockGrey"))
+            {
+                float distance = Vector3.Distance(position, block.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestGreyBlock = block;
+                }
+            }
+        }
+
+        return closestGreyBlock;
+    }
+
+    // Find a random block excluding a specific tag
+    public GameObject FindRandomBlockExcludingTag(string excludedTag)
+    {
+        GameObject[] filteredBlocks = GetCityBlocksExcludingTag(excludedTag);
+
+        if (filteredBlocks.Length == 0)
+        {
+            Debug.LogWarning("CityBlockManager: No blocks available excluding the specified tag.");
+            return null;
+        }
+
+        int randomIndex = Random.Range(0, filteredBlocks.Length);
+        return filteredBlocks[randomIndex];
     }
 }
