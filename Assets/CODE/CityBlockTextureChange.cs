@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class CityBlockTextureChange : MonoBehaviour
 {
@@ -16,12 +17,18 @@ public class CityBlockTextureChange : MonoBehaviour
 
         if (blockRenderer == null)
         {
-            Debug.LogError($"CityBlockTextureChange: No Renderer found on {gameObject.name}.");
+            //Debug.LogError($"CityBlockTextureChange: No Renderer found on {gameObject.name}.");
             return;
         }
-
-        UpdateBlockTexture(); // Set the city block's color
+  StartCoroutine(DelayedUpdateBlockTexture());
+    
     }
+
+private IEnumerator DelayedUpdateBlockTexture()
+{
+    yield return new WaitForSeconds(0.5f);  // Wait for 0.5 seconds
+    UpdateBlockTexture();                   // Run the function once
+}
 
     public void UpdateBlockTexture()
     {

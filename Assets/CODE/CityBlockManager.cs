@@ -9,7 +9,7 @@ public class CityBlockManager : MonoBehaviour
     private void Awake()
     {
         // Find all GameObjects with the tag "CityBlockNone"
-        cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockNone");
+        cityBlocks = GameObject.FindGameObjectsWithTag("CityBlockGrey");
         Debug.Log($"CityBlockManager: Found {cityBlocks.Length} city blocks in the scene.");
     }
 
@@ -42,7 +42,7 @@ public class CityBlockManager : MonoBehaviour
     {
         foreach (GameObject block in cityBlocks)
         {
-            if (block.CompareTag("CityBlockNone"))
+            if (block.CompareTag("CityBlockGrey"))
             {
                 ChangeBlockTagAndMaterial(block, "CityBlockGrey");
             }
@@ -52,7 +52,7 @@ public class CityBlockManager : MonoBehaviour
     // Helper to assign a specific color to a random block
     private void AssignColorToRandomBlock(string colorTag)
     {
-        GameObject randomBlock = GetRandomBlockWithTag("CityBlockNone");
+        GameObject randomBlock = GetRandomBlockWithTag("CityBlockGrey");
         if (randomBlock != null)
         {
             ChangeBlockTagAndMaterial(randomBlock, colorTag);

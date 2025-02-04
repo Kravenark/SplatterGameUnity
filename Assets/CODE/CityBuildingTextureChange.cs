@@ -12,15 +12,24 @@ public class CityBuildingTextureChange : MonoBehaviour
     private Coroutine transitionCoroutine;
     private bool isBeingSprayed = false; // Tracks if currently being sprayed
 
-    private void Start()
+private void Start()
+{
+    buildingRenderer = GetComponent<Renderer>();
+
+    if (buildingRenderer == null)
     {
-        buildingRenderer = GetComponent<Renderer>();
-        if (buildingRenderer == null)
-        {
-            Debug.LogError($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
-            return;
-        }
+        // Check child objects if Renderer is not on the parent
+        buildingRenderer = GetComponentInChildren<Renderer>();
     }
+
+    if (buildingRenderer == null)
+    {
+      //  Debug.LogError($"CityBuildingTextureChange: Renderer is missing on {gameObject.name} or its children.");
+    }
+}
+
+
+
 
     public void StartSpraying(string playerTag)
     {
@@ -81,22 +90,19 @@ public class CityBuildingTextureChange : MonoBehaviour
         Debug.Log($"CityBuildingTextureChange: {gameObject.name} fully converted to {gameObject.tag}.");
     }
 
-    private Material GetMaterialFromTag(string tag)
+private Material GetMaterialFromTag(string tag)
+{
+    switch (tag)
     {
-        switch (tag)
-        {
-            case "PlayerRed":
-                return redMaterial;
-            case "PlayerGreen":
-                return greenMaterial;
-            case "PlayerBlue":
-                return blueMaterial;
-            case "CityBuildingGrey":
-                return greyMaterial;
-            default:
-                return null;
-        }
+        case "PlayerRed": return redMaterial;
+        case "PlayerGreen": return greenMaterial;
+        case "PlayerBlue": return blueMaterial;
+        case "CityBuildingGrey": return greyMaterial;
+        case "CityBlockNone": return greyMaterial; // Default material or a special one
+        default: return null;
     }
+}
+
 
 
 
