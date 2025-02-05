@@ -6,6 +6,9 @@ public class CityBlockManager : MonoBehaviour
     private GameObject[] cityBlocks; // Array to store all city blocks in the scene
     public bool cityBlockInitialized = false; // Flag to indicate if city blocks are initialized
 
+
+
+
     private void Awake()
     {
         // Find all GameObjects with the tag "CityBlockNone"
@@ -130,3 +133,9 @@ public class CityBlockManager : MonoBehaviour
         return filteredBlocks[randomIndex];
     }
 }
+
+
+
+
+
+

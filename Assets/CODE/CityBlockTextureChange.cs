@@ -11,6 +11,10 @@ public class CityBlockTextureChange : MonoBehaviour
 
     private Renderer blockRenderer;
 
+
+
+
+
     private void Start()
     {
         blockRenderer = GetComponent<Renderer>();

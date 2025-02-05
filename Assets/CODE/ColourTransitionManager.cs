@@ -9,6 +9,17 @@ public class ColourTransitionManager : MonoBehaviour
 
     private Renderer blockRenderer; // Renderer for the block
 
+
+        int totalBLDCount = 5;
+        int redBLDCount = 0;
+        int greenBLDCount = 0;
+        int blueBLDCount = 0;
+        int greyBLDCount = 0;
+ public       float percColoursRed = 0;
+ public       float percColoursBlue = 0;
+ public       float percColoursGreen = 0;
+        float percColoursGrey = 0;
+
     private void Start()
     {
         blockRenderer = GetComponent<Renderer>();
@@ -21,7 +32,66 @@ public class ColourTransitionManager : MonoBehaviour
     private void Update()
     {
         UpdateBlockColorBasedOnChildren();
+
+        UpdateBlockPercentages();
     }
+
+    
+
+public void UpdateBlockPercentages()
+{
+    // Reset total and color-specific counts
+    totalBLDCount = 0;
+    redBLDCount = 0;
+    greenBLDCount = 0;
+    blueBLDCount = 0;
+    greyBLDCount = 0;
+
+    // Count buildings and categorize by color
+    foreach (Transform child in transform)
+    {
+        if (child.gameObject.layer == LayerMask.NameToLayer("Buildings"))
+        {
+            totalBLDCount++;
+
+            switch (child.tag)
+            {
+                case "CityBuildingRed":
+                    redBLDCount++;
+                    break;
+                case "CityBuildingGreen":
+                    greenBLDCount++;
+                    break;
+                case "CityBuildingBlue":
+                    blueBLDCount++;
+                    break;
+                case "CityBuildingGrey":
+                    greyBLDCount++;
+                    break;
+            }
+        }
+    }
+
+    // Avoid division by zero
+    if (totalBLDCount == 0)
+    {
+        percColoursRed = 0f;
+        percColoursGreen = 0f;
+        percColoursBlue = 0f;
+        percColoursGrey = 0f;
+        Debug.LogWarning("UpdateBlockPercentages: No buildings found to calculate percentages.");
+        return;
+    }
+
+    // Calculate percentages
+    percColoursRed = (redBLDCount / (float)totalBLDCount) * 100f;
+    percColoursGreen = (greenBLDCount / (float)totalBLDCount) * 100f;
+    percColoursBlue = (blueBLDCount / (float)totalBLDCount) * 100f;
+    percColoursGrey = (greyBLDCount / (float)totalBLDCount) * 100f;
+
+    // Debug output to verify calculations
+    Debug.Log($"Building Color Percentages: Red: {percColoursRed}%, Green: {percColoursGreen}%, Blue: {percColoursBlue}%, Grey: {percColoursGrey}% in {gameObject.name}");
+}
 
     private void UpdateBlockColorBasedOnChildren()
     {
