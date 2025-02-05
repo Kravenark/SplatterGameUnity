@@ -15,6 +15,9 @@ public class PlayerCombat : MonoBehaviour
     private Vector3 initialPosition;
     private LineRenderer lineRenderer;
 
+    [Header("Player Settings")]
+    public int playerNumber = 1; // 1 for Player 1, 2 for Player 2
+
     private void Start()
     {
         initialPosition = transform.position;
@@ -32,24 +35,51 @@ public class PlayerCombat : MonoBehaviour
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.startColor = Color.red;
         lineRenderer.endColor = Color.red;
-        lineRenderer.enabled = false; 
+        lineRenderer.enabled = false;
     }
 
- private void Update()
+    private void Update()
     {
         if (isRespawning) return;
 
-        if (Input.GetMouseButton(0) && Time.time >= lastShotTime + shootingCooldown)
+        // Handle shooting based on player number
+        if (ShouldShoot() && Time.time >= lastShotTime + shootingCooldown)
         {
             Shoot();
         }
-        else if (Input.GetMouseButtonUp(0))
+        else if (ShouldStopShooting())
         {
             lineRenderer.enabled = false;
-
-            // Stop spraying buildings when the player releases the fire button
             StopSprayingBuildings();
         }
+    }
+
+    private bool ShouldShoot()
+    {
+        if (playerNumber == 1)
+        {
+            return Input.GetKey(KeyCode.E);
+        }
+        else if (playerNumber == 2)
+        {
+            return Input.GetKey(KeyCode.O);
+        }
+
+        return false;
+    }
+
+    private bool ShouldStopShooting()
+    {
+        if (playerNumber == 1)
+        {
+            return Input.GetKeyUp(KeyCode.E);
+        }
+        else if (playerNumber == 2)
+        {
+            return Input.GetKeyUp(KeyCode.O);
+        }
+
+        return false;
     }
 
     private void StopSprayingBuildings()
@@ -61,44 +91,28 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-
-
- private void Shoot()
+    private void Shoot()
     {
         lastShotTime = Time.time;
 
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 worldMousePosition;
+        // Shoot directly forward from the player
+        Vector3 shootingDirection = transform.forward;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, raycastLayerMask))
-        {
-            worldMousePosition = hit.point;
-        }
-        else
-        {
-            worldMousePosition = ray.GetPoint(10f);
-        }
+        // Set the line renderer positions
+        Vector3 startPoint = transform.position;
+        Vector3 endPoint = startPoint + (shootingDirection * lineRendererLength);
 
-        float playerY = transform.position.y;
-        worldMousePosition.y = playerY;
-
-        Vector3 direction = (worldMousePosition - transform.position).normalized;
-        if (direction == Vector3.zero) direction = transform.forward;
-
-        Vector3 endPoint = transform.position + (direction * lineRendererLength);
-        endPoint.y = playerY;
-
-        lineRenderer.SetPosition(0, transform.position);
+        lineRenderer.SetPosition(0, startPoint);
         lineRenderer.SetPosition(1, endPoint);
         lineRenderer.enabled = true;
 
-        if (Physics.Raycast(transform.position, direction, out hit, lineRendererLength, raycastLayerMask))
+        // Perform the raycast to detect hits
+        if (Physics.Raycast(startPoint, shootingDirection, out RaycastHit hit, lineRendererLength, raycastLayerMask))
         {
             endPoint = hit.point;
-            endPoint.y = playerY;
-
             GameObject target = hit.collider.gameObject;
 
+            // Handle player hit
             if (target.CompareTag("PlayerRed") || target.CompareTag("PlayerGreen") || target.CompareTag("PlayerBlue"))
             {
                 if (Random.Range(1, 101) <= hitChance)
@@ -106,6 +120,7 @@ public class PlayerCombat : MonoBehaviour
                     HandleHit(target);
                 }
             }
+            // Handle city building spray
             else if (target.CompareTag("CityBuildingRed") || target.CompareTag("CityBuildingGreen") ||
                      target.CompareTag("CityBuildingBlue") || target.CompareTag("CityBuildingGrey"))
             {
@@ -113,12 +128,12 @@ public class PlayerCombat : MonoBehaviour
                 if (building != null)
                 {
                     string playerTag = gameObject.tag;
-                    building.StartSpraying(playerTag); // Start spraying transition
+                    building.StartSpraying(playerTag);
                 }
             }
         }
 
-        DrawRay(transform.position, endPoint);
+        DrawRay(startPoint, endPoint);
     }
 
     private void DrawRay(Vector3 start, Vector3 end)
@@ -136,7 +151,7 @@ public class PlayerCombat : MonoBehaviour
         AICombat targetAI = target.GetComponent<AICombat>();
         if (targetAI != null)
         {
-            // targetAI.StartRespawn(); (Uncomment when needed)
+            // targetAI.StartRespawn(); // Uncomment when ready
         }
 
         Debug.Log($"{target.name} was hit by {gameObject.name}!");

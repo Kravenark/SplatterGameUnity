@@ -272,6 +272,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
+  rotationSpeed: 720
 --- !u!136 &28289427
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -407,6 +408,7 @@ MonoBehaviour:
     m_Bits: 896
   lineRendererLength: 10
   respawnDelay: 3.1
+  playerNumber: 1
 --- !u!114 &28289433
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7830,6 +7832,7 @@ GameObject:
   - component: {fileID: 1314369630}
   - component: {fileID: 1314369639}
   - component: {fileID: 1314369640}
+  - component: {fileID: 1314369641}
   m_Layer: 0
   m_Name: Player2
   m_TagString: Player
@@ -8098,6 +8101,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
+  rotationSpeed: 720
+--- !u!114 &1314369641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314369629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f94708c4331314ab1bf36734ea7231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shootingCooldown: 0.1
+  hitChance: 50
+  shootingRange: 50
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 896
+  lineRendererLength: 10
+  respawnDelay: 3.1
+  playerNumber: 2
 --- !u!1 &1337165825
 GameObject:
   m_ObjectHideFlags: 0
