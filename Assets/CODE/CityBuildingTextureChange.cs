@@ -52,7 +52,7 @@ private void Start()
     {
         if (buildingRenderer == null)
         {
-            Debug.LogWarning($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
+            //Debug.LogWarning($"CityBuildingTextureChange: No Renderer found on {gameObject.name}.");
             yield break;
         }
 
@@ -60,7 +60,7 @@ private void Start()
         Material targetMaterial = GetMaterialFromTag(playerTag);
         if (targetMaterial == null)
         {
-            Debug.LogWarning($"CityBuildingTextureChange: No valid material found for {playerTag}.");
+           // Debug.LogWarning($"CityBuildingTextureChange: No valid material found for {playerTag}.");
             yield break;
         }
 
@@ -110,7 +110,7 @@ private Material GetMaterialFromTag(string tag)
 {
     if (buildingRenderer == null)
     {
-        Debug.LogError($"CityBuildingTextureChange: Renderer is missing on {gameObject.name}");
+        //Debug.LogError($"CityBuildingTextureChange: Renderer is missing on {gameObject.name}");
         return;
     }
 

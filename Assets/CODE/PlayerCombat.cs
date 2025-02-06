@@ -15,6 +15,8 @@ public class PlayerCombat : MonoBehaviour
     private Vector3 initialPosition;
     private LineRenderer lineRenderer;
 
+    public float health = 100;
+
     [Header("Player Settings")]
     public int playerNumber = 1; // 1 for Player 1, 2 for Player 2
 

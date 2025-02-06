@@ -5,6 +5,9 @@ using System.Collections.Generic;
 public class PlayerManager : MonoBehaviour
 {
     private Dictionary<GameObject, string> playerColors = new Dictionary<GameObject, string>(); // Track player colors
+    public Dictionary<GameObject, int> playerHealth = new Dictionary<GameObject, int>(); // Track player health
+
+    public int maxHealth = 100; // Maximum health for each player
     private List<string> availableColors = new List<string> { "PlayerRed", "PlayerGreen", "PlayerBlue" };
 
     void Start()
@@ -30,6 +33,9 @@ public class PlayerManager : MonoBehaviour
                 Debug.LogError("PlayerManager: A player object was not found!");
                 return;
             }
+
+            // Initialize player health
+            playerHealth[player] = maxHealth;
         }
 
         // Assign colors and ensure they are stored before teleporting
@@ -84,6 +90,37 @@ public class PlayerManager : MonoBehaviour
 
             Debug.Log($"PlayerManager: Assigned {chosenColor} to player {player.name}.");
         }
+    }
+
+    // Reduce health of a player (call this from combat or collision scripts)
+    public void ReducePlayerHealth(GameObject player, int damage)
+    {
+        if (playerHealth.ContainsKey(player))
+        {
+            playerHealth[player] -= damage;
+            playerHealth[player] = Mathf.Clamp(playerHealth[player], 0, maxHealth);
+
+            Debug.Log($"PlayerManager: {player.name} took {damage} damage. Current health: {playerHealth[player]}");
+
+            if (playerHealth[player] <= 0)
+            {
+                Debug.Log($"{player.name} is eliminated!");
+                // Handle player elimination (disable, respawn, etc.)
+                player.SetActive(false);  // Example: deactivate the player
+            }
+        }
+    }
+
+    // Get player health (used by UIPlayerCanvas)
+    public int GetPlayerHealth(GameObject player)
+    {
+        if (playerHealth.TryGetValue(player, out int health))
+        {
+            return health;
+        }
+
+        Debug.LogWarning($"PlayerManager: No health record found for {player.name}");
+        return 0;
     }
 
     // Coroutine to teleport all players to their respective spawn positions after a delay
