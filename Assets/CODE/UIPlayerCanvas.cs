@@ -8,297 +8,179 @@ public class UIPlayerCanvas : MonoBehaviour
     [Tooltip("Set the player number (1, 2, or 3)")]
     public int PlayerNumber;
 
-    private GameObject playerUI;         // Player UI reference
-    private Slider progressSlider;       // Slider reference
-    private Image backgroundImage;       // Slider Background image
-    private Image fillImage;             // Slider Fill image
-private TMPro.TextMeshProUGUI healthText;  // Make sure this is TextMeshProUGUI
+    private GameObject playerUI;
+    private GameObject playerDeathUI;
+    private GameObject deathHoverSpawnPos;
+    private Slider progressSlider;
+    private Image backgroundImage;
+    private Image fillImage;
+    private TextMeshProUGUI healthText;
 
-            // Health text reference
+    private Transform playerTransform;
+    private PlayerCombat playerCombat;
+    private Camera playerCamera;
 
-    private ColourTransitionManager currentCityBlock;  // Reference to the current City Block's script
-    private Transform playerTransform;   // Reference to the player transform
-    private PlayerManager playerManager; // Reference to PlayerManager to get health data
+    [Header("Respawn Settings")]
+    public LayerMask spawnLayerMask; // Set this to the layer where spawn points exist
 
     private void Start()
     {
-        playerManager = FindObjectOfType<PlayerManager>();
-        if (playerManager == null)
-        {
-            Debug.LogError("UIPlayerCanvas: PlayerManager not found in the scene!");
-            return;
-        }
-
-        // Find the player object
-        playerTransform = GameObject.Find($"Player{PlayerNumber}").transform;
-
-        if (playerTransform == null)
+        GameObject playerObject = GameObject.Find($"Player{PlayerNumber}");
+        if (playerObject == null)
         {
             Debug.LogError($"UIPlayerCanvas: Player{PlayerNumber} not found!");
             return;
         }
 
-        // Find the UI for this player
-        FindPlayerUI();
+        playerCombat = playerObject.GetComponent<PlayerCombat>();
+        if (playerCombat == null)
+        {
+            Debug.LogError($"UIPlayerCanvas: Player{PlayerNumber} missing PlayerCombat component!");
+            return;
+        }
 
-        // Initially hide the UI
+        playerTransform = playerObject.transform;
+        playerCamera = GameObject.Find($"Player{PlayerNumber}Camera")?.GetComponent<Camera>();
+
+        if (playerCamera == null)
+        {
+            Debug.LogError($"UIPlayerCanvas: Camera for Player{PlayerNumber} not found!");
+            return;
+        }
+
+        FindPlayerUI();
+    }
+
+    private void Update()
+    {
         if (playerUI != null)
         {
-            playerUI.SetActive(true);
+            UpdateHealthText();
+            UpdateHealthTextPosition();
+            HandleDeathUI();
+            
+            if (playerCombat.health <= 0)
+            {
+                ChooseRespawnLocation();
+            }
         }
     }
 
-private void Update()
-{
-    if (playerUI != null)
+    private void FindPlayerUI()
     {
-        // Ensure Health Text follows the player
-        UpdateHealthTextPosition();
-    }
-
-    if (currentCityBlock != null)
-    {
-        UpdateSliderProgress();
-    }
-}
-private void UpdateHealthTextPosition()
-{
-    if (healthText == null) return;
-
-    // Find the player's camera dynamically based on PlayerNumber
-    Camera playerCamera = (PlayerNumber == 1) ? GameObject.Find("Player1Camera").GetComponent<Camera>()
-                                              : GameObject.Find("Player2Camera").GetComponent<Camera>();
-
-    if (playerCamera == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: Camera for Player{PlayerNumber} not found!");
-        return;
-    }
-
-    // Convert world position to screen position using the player's camera
-    Vector3 screenPosition = playerCamera.WorldToScreenPoint(transform.position + Vector3.up * 2.0f);
-    
-    // Only update position if the object is in front of the camera
-    if (screenPosition.z > 0)
-    {
-        healthText.transform.position = screenPosition;
-    }
-}
-
-private void FindPlayerUI()
-{
-    // Find the Canvas
-    GameObject canvas = GameObject.Find("Canvas");
-    if (canvas == null)
-    {
-        Debug.LogError("UIPlayerCanvas: No Canvas found in the scene!");
-        return;
-    }
-
-    // Construct the Player UI name dynamically (e.g., "Player01UI")
-    string uiObjectName = $"Player0{PlayerNumber}UI";
-
-    // Find the Player UI inside the Canvas
-    Transform uiTransform = canvas.transform.Find(uiObjectName);
-
-    if (uiTransform == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: Could not find {uiObjectName} inside the Canvas!");
-        return;
-    }
-
-    playerUI = uiTransform.gameObject;
-
-    // **Find the Slider inside Player UI**
-    Transform sliderTransform = playerUI.transform.Find("Slider");
-    if (sliderTransform == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: Slider not found inside {uiObjectName}.");
-    }
-    else
-    {
-        progressSlider = sliderTransform.GetComponent<Slider>();
-        if (progressSlider == null)
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas == null)
         {
-            Debug.LogError($"UIPlayerCanvas: Slider exists but is missing the Slider component in {uiObjectName}.");
+            Debug.LogError("UIPlayerCanvas: No Canvas found in the scene!");
+            return;
         }
-    }
 
-    // **Find the Background inside the Slider**
-    Transform backgroundTransform = sliderTransform.Find("Background");
-    if (backgroundTransform == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: Background not found inside Slider for {uiObjectName}.");
-    }
-    else
-    {
-        backgroundImage = backgroundTransform.GetComponent<UnityEngine.UI.Image>();
-        if (backgroundImage == null)
+        string uiObjectName = $"Player0{PlayerNumber}UI";
+        Transform uiTransform = canvas.transform.Find(uiObjectName);
+
+        if (uiTransform == null)
         {
-            Debug.LogError($"UIPlayerCanvas: Background exists but is missing Image component in {uiObjectName}.");
+            Debug.LogError($"UIPlayerCanvas: Could not find {uiObjectName} inside the Canvas!");
+            return;
         }
-    }
 
-    // **Find the Fill inside the Slider**
-    Transform fillTransform = sliderTransform.Find("Fill Area/Fill");
-    if (fillTransform == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: Fill not found inside Slider for {uiObjectName}.");
-    }
-    else
-    {
-        fillImage = fillTransform.GetComponent<UnityEngine.UI.Image>();
-        if (fillImage == null)
+        playerUI = uiTransform.gameObject;
+        Transform healthTextTransform = playerUI.transform.Find("HealthText");
+
+        if (healthTextTransform == null)
         {
-            Debug.LogError($"UIPlayerCanvas: Fill exists but is missing Image component in {uiObjectName}.");
+            Debug.LogError($"UIPlayerCanvas: HealthText not found inside {uiObjectName}.");
         }
-    }
-
-    // **Find the HealthText inside Player UI**
-    Transform healthTextTransform = playerUI.transform.Find("HealthText");
-    if (healthTextTransform == null)
-    {
-        Debug.LogError($"UIPlayerCanvas: HealthText not found inside {uiObjectName}.");
-    }
-    else
-    {
-        healthText = healthTextTransform.GetComponent<TMPro.TextMeshProUGUI>();
-        if (healthText == null)
+        else
         {
-            Debug.LogError($"UIPlayerCanvas: HealthText exists but is missing the TextMeshProUGUI component in {uiObjectName}.");
+            healthText = healthTextTransform.GetComponent<TextMeshProUGUI>();
+            if (healthText == null)
+            {
+                Debug.LogError($"UIPlayerCanvas: HealthText exists but is missing the TextMeshProUGUI component in {uiObjectName}.");
+            }
+        }
+
+        // Find PlayerDeathUI
+        Transform deathUITransform = playerUI.transform.Find($"Player0{PlayerNumber}DeathUI");
+        if (deathUITransform == null)
+        {
+            Debug.LogError($"UIPlayerCanvas: Player0{PlayerNumber}DeathUI not found inside {uiObjectName}.");
+        }
+        else
+        {
+            playerDeathUI = deathUITransform.gameObject;
+            playerDeathUI.SetActive(false);
+        }
+
+        // Find Death Hover Spawn Position inside Death UI
+        Transform hoverSpawnTransform = deathUITransform.Find("Death Hover SpawnPos");
+        if (hoverSpawnTransform == null)
+        {
+            Debug.LogError($"UIPlayerCanvas: Death Hover SpawnPos not found inside {uiObjectName}.");
+        }
+        else
+        {
+            deathHoverSpawnPos = hoverSpawnTransform.gameObject;
         }
     }
-
-    Debug.Log($"UIPlayerCanvas: Successfully found UI components for Player {PlayerNumber}");
-}
-
-
-
-
 
     private void UpdateHealthText()
     {
-        if (healthText != null && playerManager != null)
+        if (healthText != null && playerCombat != null)
         {
-            int currentHealth = playerManager.GetPlayerHealth(playerTransform.gameObject);
-            int maxHealth = playerManager.maxHealth;
-
-            healthText.text = $"{currentHealth} / {maxHealth}";
+            healthText.text = $"{playerCombat.health} / 100";
         }
     }
 
-private void OnTriggerEnter(Collider other)
-{
-    if (other.gameObject.layer == LayerMask.NameToLayer("CityBlockAREA"))
+    private void UpdateHealthTextPosition()
     {
-        if (progressSlider != null)
+        if (healthText == null || playerTransform == null || playerCamera == null) return;
+
+        Vector3 worldPosition = playerTransform.position + Vector3.up * 2.0f;
+        Vector3 screenPosition = playerCamera.WorldToScreenPoint(worldPosition);
+
+        if (screenPosition.z > 0)
         {
-            progressSlider.gameObject.SetActive(true);
-            Debug.Log($"UIPlayerCanvas: Player {PlayerNumber} entered {other.gameObject.name}. Slider activated.");
+            healthText.transform.position = screenPosition;
         }
+    }
 
-        currentCityBlock = other.GetComponent<ColourTransitionManager>();
-        if (currentCityBlock == null)
+    private void HandleDeathUI()
+    {
+        if (playerCombat != null && playerDeathUI != null)
         {
-            Debug.LogWarning($"PlayerUI: No ColourTransitionManager found on {other.gameObject.name}.");
+            if (playerCombat.health <= 0)
+            {
+                playerDeathUI.SetActive(true);
+            }
+            else
+            {
+                playerDeathUI.SetActive(false);
+            }
         }
-
-        // Update UI colors
-        UpdateUIColors(other.gameObject.tag, this.gameObject.tag);
     }
-}
 
-
-private void OnTriggerExit(Collider other)
-{
-    if (other.gameObject.layer == LayerMask.NameToLayer("CityBlockAREA"))
+    private void ChooseRespawnLocation()
     {
-        Debug.Log("I touched a city block trigger");
-        progressSlider.gameObject.SetActive(false);
-        if (progressSlider != null)
+        if (deathHoverSpawnPos == null || playerCamera == null) return;
+
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, spawnLayerMask))
         {
-            progressSlider.gameObject.SetActive(false);
-            Debug.Log($"UIPlayerCanvas: Player {PlayerNumber} exited {other.gameObject.name}. Slider deactivated.");
+            GameObject spawnPoint = hit.collider.gameObject;
+
+            // **Only snap if the spawn point matches the player's tag**
+            if (spawnPoint.CompareTag(gameObject.tag))
+            {
+                Debug.Log($"UIPlayerCanvas: Hovered over valid spawn point {spawnPoint.name}.");
+
+                // Move Death Hover SpawnPos to the screen position of the hovered spawn point
+                Vector3 screenPos = playerCamera.WorldToScreenPoint(spawnPoint.transform.position);
+                if (screenPos.z > 0)
+                {
+                    deathHoverSpawnPos.transform.position = screenPos;
+                }
+            }
         }
-
-        currentCityBlock = null;
     }
-}
-
-
-
-private void UpdateUIColors(string cityBlockTag, string playerTag)
-{
-    if (backgroundImage != null)
-    {
-        backgroundImage.color = GetColorFromTag(cityBlockTag);  // Background based on CityBlock tag
-    }
-
-    if (fillImage != null)
-    {
-        fillImage.color = GetColorFromTag(playerTag);  // Fill based on Player tag
-    }
-}
-
-private Color GetColorFromTag(string tag)
-{
-    switch (tag)
-    {
-        case "CityBlockRed":
-        case "PlayerRed":
-            return Color.red;
-
-        case "CityBlockGreen":
-        case "PlayerGreen":
-            return Color.green;
-
-        case "CityBlockBlue":
-        case "PlayerBlue":
-            return Color.blue;
-
-        case "CityBlockGrey":
-            return Color.grey;
-
-        default:
-            Debug.LogWarning($"PlayerUI: Unknown tag '{tag}'. Defaulting to white.");
-            return Color.white;
-    }
-}
-
-
-private void UpdateSliderProgress()
-{
-    if (progressSlider == null || currentCityBlock == null)
-    {
-        Debug.LogWarning($"UIPlayerCanvas: Slider or CityBlock reference missing for Player {PlayerNumber}.");
-        return;
-    }
-
-    float playerPercentage = 0f;
-
-    switch (this.gameObject.tag)
-    {
-        case "PlayerRed":
-            playerPercentage = currentCityBlock.percColoursRed;
-            break;
-        case "PlayerGreen":
-            playerPercentage = currentCityBlock.percColoursGreen;
-            break;
-        case "PlayerBlue":
-            playerPercentage = currentCityBlock.percColoursBlue;
-            break;
-        default:
-            Debug.LogWarning($"UIPlayerCanvas: Unknown player tag '{this.gameObject.tag}'. Slider won't update.");
-            return;
-    }
-
-    float newValue = Mathf.Clamp(playerPercentage / 100f, 0f, 1f);
-
-    Debug.Log($"[Slider Debug] Player {PlayerNumber} - Tag: {this.gameObject.tag} - Assigned Percentage: {playerPercentage}% - New Slider Value: {newValue}");
-
-    // Update slider
-    progressSlider.value = newValue;
-}
-
-
 }
