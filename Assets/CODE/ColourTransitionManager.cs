@@ -15,7 +15,7 @@ public class ColourTransitionManager : MonoBehaviour
         int greenBLDCount = 0;
         int blueBLDCount = 0;
         int greyBLDCount = 0;
- public       float percColoursRed = 0;
+ public  float percColoursRed = 0;
  public       float percColoursBlue = 0;
  public       float percColoursGreen = 0;
         float percColoursGrey = 0;

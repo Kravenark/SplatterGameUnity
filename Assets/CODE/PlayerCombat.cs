@@ -13,13 +13,15 @@ public class PlayerCombat : MonoBehaviour
     [Header("Health Settings")]
     public float health = 100f;
     public float damagePerSecond = 20f;
-    public float respawnDelay = 3f;
+    public float respawnDelay = 5f;
 
     private float lastShotTime = 0f;
     private bool isRespawning = false;
     private LineRenderer lineRenderer;
     private Coroutine damageCoroutine = null;
     private PlayerCombat currentTarget = null; // Tracks the player being hit
+    
+    public CameraFollow cameraFollow;
 
     private static Dictionary<PlayerCombat, int> activeAttackers = new Dictionary<PlayerCombat, int>();
 
@@ -28,6 +30,9 @@ public class PlayerCombat : MonoBehaviour
 
     private void Start()
     {
+
+        cameraFollow = GameObject.Find("Player" + playerNumber + "Camera").GetComponent<CameraFollow>();
+
         lineRenderer = GetComponent<LineRenderer>();
         if (lineRenderer == null)
         {
@@ -221,9 +226,10 @@ public class PlayerCombat : MonoBehaviour
 
         // Disable shooting & movement
         this.enabled = false;
-
+      cameraFollow.OnPlayerDeath();
         // Reset health
-        health = 100;
+
+
 
         // Respawn after delay
         StartCoroutine(RespawnAfterDelay(respawnDelay));
@@ -233,6 +239,8 @@ public class PlayerCombat : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
+        health = 100;
+    cameraFollow.OnPlayerRespawn(transform); 
         Debug.Log($"{gameObject.name} has respawned.");
 
         // Enable shooting & movement
